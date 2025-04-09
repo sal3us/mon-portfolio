@@ -1,9 +1,9 @@
-import { e as createComponent, r as renderTemplate, m as maybeRenderHead, g as addAttribute, h as createAstro, i as renderComponent, j as renderHead } from '../astro_BXvExnak.mjs';
+import { c as createComponent, m as maybeRenderHead, r as renderTemplate, a as createAstro, b as addAttribute, e as renderComponent, f as renderHead } from '../chunks/astro/server_uNW_YN8v.mjs';
 import 'kleur/colors';
-import 'html-escaper';
 import 'clsx';
-/* empty css                          */
-import { $ as $$Image } from './generic_CM-gt6nC.mjs';
+/* empty css                                 */
+import { $ as $$Image } from '../chunks/_astro_assets_pwAddluS.mjs';
+export { renderers } from '../renderers.mjs';
 
 const $$Header = createComponent(($$result, $$props, $$slots) => {
   return renderTemplate`${maybeRenderHead()}<header class="header"> <h1 id="inicio"> Portfolio</h1> <!-- Texte modifié --> <nav class="nav"> <ul class="ul-nav"> <a href="#inicio"> <li class="li-nav">Accueil</li> <!-- Texte modifié --> </a> <a href="#proyectos"> <li class="li-nav">Mes Projets</li> <!-- Texte modifié --> </a> <a href="#skills"> <li class="li-nav">Compétences</li> </a> <a href="#contacto"> <li class="li-nav">Me Contacter</li> <!-- Texte modifié --> </a> </ul> </nav> <div class="container-bnt-menu"> <div class="btn-menu"> <span class="linea-menu" id="linea1"></span> <span class="linea-menu" id="linea2"></span> <span class="linea-menu" id="linea3"></span> </div> </div> <div class="menu-drop"></div>  </header> `;
@@ -205,4 +205,13 @@ const $$Index = createComponent(($$result, $$props, $$slots) => {
 const $$file = "C:/xampp/htdocs/Portafolio-main/Portafolio-main/src/pages/index.astro";
 const $$url = "";
 
-export { $$Index as default, $$file as file, $$url as url };
+const _page = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
+  __proto__: null,
+  default: $$Index,
+  file: $$file,
+  url: $$url
+}, Symbol.toStringTag, { value: 'Module' }));
+
+const page = () => _page;
+
+export { page };

@@ -1,8 +1,11 @@
-import { A as AstroError, c as InvalidImageService, d as ExpectedImageOptions, E as ExpectedImage, F as FailedToFetchRemoteImageDimensions, e as createComponent, f as ImageMissingAlt, r as renderTemplate, m as maybeRenderHead, g as addAttribute, s as spreadAttributes, h as createAstro } from '../astro_BXvExnak.mjs';
-import { r as resolveSrc, i as isRemoteImage, a as isESMImportedImage, b as isLocalService, D as DEFAULT_HASH_PROPS, c as isRemotePath, d as isRemoteAllowed } from '../astro/assets-service_BU5bjInR.mjs';
-import 'html-escaper';
-import 'clsx';
+import { A as AstroError, g as NoImageMetadata, F as FailedToFetchRemoteImageDimensions, h as ExpectedImageOptions, j as ExpectedImage, k as ExpectedNotESMImage, r as resolveSrc, l as isRemoteImage, i as isRemotePath, m as isESMImportedImage, n as isLocalService, D as DEFAULT_HASH_PROPS, o as InvalidImageService, p as ImageMissingAlt } from './astro/assets-service_CT66fKWp.mjs';
+import { c as createComponent, a as createAstro, m as maybeRenderHead, b as addAttribute, s as spreadAttributes, r as renderTemplate } from './astro/server_uNW_YN8v.mjs';
 import * as mime from 'mrmime';
+import 'clsx';
+
+function isImageMetadata(src) {
+  return src.fsPath && !("fsPath" in src);
+}
 
 const decoder = new TextDecoder();
 const toUTF8String = (input, start = 0, end = input.length) => decoder.decode(input.slice(start, end));
@@ -352,7 +355,7 @@ const JPG = {
     while (input.length) {
       const i = readUInt16BE(input, 0);
       if (input[i] !== 255) {
-        input = input.slice(1);
+        input = input.slice(i);
         continue;
       }
       if (isEXIF(input)) {
@@ -535,9 +538,9 @@ function parseViewbox(viewbox) {
   };
 }
 function parseAttributes(root) {
-  const width = root.match(extractorRegExps.width);
-  const height = root.match(extractorRegExps.height);
-  const viewbox = root.match(extractorRegExps.viewbox);
+  const width = extractorRegExps.width.exec(root);
+  const height = extractorRegExps.height.exec(root);
+  const viewbox = extractorRegExps.viewbox.exec(root);
   return {
     height: height && parseLength(height[2]),
     viewbox: viewbox && parseViewbox(viewbox[2]),
@@ -573,7 +576,7 @@ const SVG = {
   // Scan only the first kilo-byte to speed up the check on larger files
   validate: (input) => svgReg.test(toUTF8String(input, 0, 1e3)),
   calculate(input) {
-    const root = toUTF8String(input).match(extractorRegExps.root);
+    const root = extractorRegExps.root.exec(toUTF8String(input));
     if (root) {
       const attrs = parseAttributes(root[0]);
       if (attrs.width && attrs.height) {
@@ -760,7 +763,7 @@ const globalOptions = {
 function lookup(input) {
   const type = detector(input);
   if (typeof type !== "undefined") {
-    if (globalOptions.disabledTypes.indexOf(type) > -1) {
+    if (globalOptions.disabledTypes.includes(type)) {
       throw new TypeError("disabled file type: " + type);
     }
     const size = typeHandlers.get(type).calculate(input);
@@ -772,10 +775,38 @@ function lookup(input) {
   throw new TypeError("unsupported file type: " + type);
 }
 
-async function probe(url) {
+async function imageMetadata(data, src) {
+  try {
+    const result = lookup(data);
+    if (!result.height || !result.width || !result.type) {
+      throw new AstroError({
+        ...NoImageMetadata,
+        message: NoImageMetadata.message(src)
+      });
+    }
+    const { width, height, type, orientation } = result;
+    const isPortrait = (orientation || 0) >= 5;
+    return {
+      width: isPortrait ? height : width,
+      height: isPortrait ? width : height,
+      format: type,
+      orientation
+    };
+  } catch {
+    throw new AstroError({
+      ...NoImageMetadata,
+      message: NoImageMetadata.message(src)
+    });
+  }
+}
+
+async function inferRemoteSize(url) {
   const response = await fetch(url);
   if (!response.body || !response.ok) {
-    throw new Error("Failed to fetch image");
+    throw new AstroError({
+      ...FailedToFetchRemoteImageDimensions,
+      message: FailedToFetchRemoteImageDimensions.message(url)
+    });
   }
   const reader = response.body.getReader();
   let done, value;
@@ -791,24 +822,27 @@ async function probe(url) {
       tmp.set(value, accumulatedChunks.length);
       accumulatedChunks = tmp;
       try {
-        const dimensions = lookup(accumulatedChunks);
+        const dimensions = await imageMetadata(accumulatedChunks, url);
         if (dimensions) {
           await reader.cancel();
           return dimensions;
         }
-      } catch (error) {
+      } catch {
       }
     }
   }
-  throw new Error("Failed to parse the size");
+  throw new AstroError({
+    ...NoImageMetadata,
+    message: NoImageMetadata.message(url)
+  });
 }
 
 async function getConfiguredImageService() {
   if (!globalThis?.astroAsset?.imageService) {
     const { default: service } = await import(
       // @ts-expect-error
-      '../astro/assets-service_BU5bjInR.mjs'
-    ).then(n => n.h).catch((e) => {
+      './astro/assets-service_CT66fKWp.mjs'
+    ).then(n => n.Z).catch((e) => {
       const error = new AstroError(InvalidImageService);
       error.cause = e;
       throw error;
@@ -836,23 +870,19 @@ async function getImage$1(options, imageConfig) {
       )
     });
   }
+  if (isImageMetadata(options)) {
+    throw new AstroError(ExpectedNotESMImage);
+  }
   const service = await getConfiguredImageService();
   const resolvedOptions = {
     ...options,
     src: await resolveSrc(options.src)
   };
-  if (options.inferSize && isRemoteImage(resolvedOptions.src)) {
-    try {
-      const result = await probe(resolvedOptions.src);
-      resolvedOptions.width ??= result.width;
-      resolvedOptions.height ??= result.height;
-      delete resolvedOptions.inferSize;
-    } catch {
-      throw new AstroError({
-        ...FailedToFetchRemoteImageDimensions,
-        message: FailedToFetchRemoteImageDimensions.message(resolvedOptions.src)
-      });
-    }
+  if (options.inferSize && isRemoteImage(resolvedOptions.src) && isRemotePath(resolvedOptions.src)) {
+    const result = await inferRemoteSize(resolvedOptions.src);
+    resolvedOptions.width ??= result.width;
+    resolvedOptions.height ??= result.height;
+    delete resolvedOptions.inferSize;
   }
   const originalFilePath = isESMImportedImage(resolvedOptions.src) ? resolvedOptions.src.fsPath : void 0;
   const clonedSrc = isESMImportedImage(resolvedOptions.src) ? (
@@ -982,89 +1012,4 @@ const $$Picture = createComponent(async ($$result, $$props, $$slots) => {
 const imageConfig = {"service":{"entrypoint":"astro/assets/services/sharp","config":{}},"domains":[],"remotePatterns":[]};
 					const getImage = async (options) => await getImage$1(options, imageConfig);
 
-const fnv1a52 = (str) => {
-  const len = str.length;
-  let i = 0, t0 = 0, v0 = 8997, t1 = 0, v1 = 33826, t2 = 0, v2 = 40164, t3 = 0, v3 = 52210;
-  while (i < len) {
-    v0 ^= str.charCodeAt(i++);
-    t0 = v0 * 435;
-    t1 = v1 * 435;
-    t2 = v2 * 435;
-    t3 = v3 * 435;
-    t2 += v0 << 8;
-    t3 += v1 << 8;
-    t1 += t0 >>> 16;
-    v0 = t0 & 65535;
-    t2 += t1 >>> 16;
-    v1 = t1 & 65535;
-    v3 = t3 + (t2 >>> 16) & 65535;
-    v2 = t2 & 65535;
-  }
-  return (v3 & 15) * 281474976710656 + v2 * 4294967296 + v1 * 65536 + (v0 ^ v3 >> 4);
-};
-const etag = (payload, weak = false) => {
-  const prefix = weak ? 'W/"' : '"';
-  return prefix + fnv1a52(payload).toString(36) + payload.length.toString(36) + '"';
-};
-
-async function loadRemoteImage(src, headers) {
-  try {
-    const res = await fetch(src, {
-      // Forward all headers from the original request
-      headers
-    });
-    if (!res.ok) {
-      return void 0;
-    }
-    return await res.arrayBuffer();
-  } catch (err) {
-    return void 0;
-  }
-}
-const GET = async ({ request }) => {
-  try {
-    const imageService = await getConfiguredImageService();
-    if (!("transform" in imageService)) {
-      throw new Error("Configured image service is not a local service");
-    }
-    const url = new URL(request.url);
-    const transform = await imageService.parseURL(url, imageConfig);
-    if (!transform?.src) {
-      throw new Error("Incorrect transform returned by `parseURL`");
-    }
-    let inputBuffer = void 0;
-    const isRemoteImage = isRemotePath(transform.src);
-    const sourceUrl = isRemoteImage ? new URL(transform.src) : new URL(transform.src, url.origin);
-    if (isRemoteImage && isRemoteAllowed(transform.src, imageConfig) === false) {
-      return new Response("Forbidden", { status: 403 });
-    }
-    inputBuffer = await loadRemoteImage(sourceUrl, isRemoteImage ? new Headers() : request.headers);
-    if (!inputBuffer) {
-      return new Response("Not Found", { status: 404 });
-    }
-    const { data, format } = await imageService.transform(
-      new Uint8Array(inputBuffer),
-      transform,
-      imageConfig
-    );
-    return new Response(data, {
-      status: 200,
-      headers: {
-        "Content-Type": mime.lookup(format) ?? `image/${format}`,
-        "Cache-Control": "public, max-age=31536000",
-        ETag: etag(data.toString()),
-        Date: (/* @__PURE__ */ new Date()).toUTCString()
-      }
-    });
-  } catch (err) {
-    console.error("Could not process image request:", err);
-    return new Response(`Server Error: ${err}`, { status: 500 });
-  }
-};
-
-const generic = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
-  __proto__: null,
-  GET
-}, Symbol.toStringTag, { value: 'Module' }));
-
-export { $$Image as $, generic as g };
+export { $$Image as $, getConfiguredImageService as g, imageConfig as i };
