@@ -1,17 +1,11 @@
 import { defineConfig } from "astro/config";
 import vercel from "@astrojs/vercel/serverless";
 
-// If you are not going to use vercel analytics you can delete the analytics
-// If you want to remove vercel from your project you can do npm uninstall vercel
+// Configuration d'Astro avec Vercel en utilisant un runtime correct et la sortie statique
 export default defineConfig({
-  output: "server",
+  output: "static",  // Si tu ne veux pas utiliser de fonctions serverless, "static" est souvent plus simple.
   adapter: vercel({
     webAnalytics: {
-      enabled: true,
-    },
-  }),
+      enabled: true,  // Tu peux désactiver ceci si tu n'as pas besoin de la fonctionnalité Web Analytics
+}}),
 });
-
-//If you don't have vercel the configuration will be empty
-
-//ej : export default defineConfig({});
