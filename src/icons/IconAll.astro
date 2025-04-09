@@ -1,0 +1,39 @@
+---
+
+import IconHtml from "./IconHtml.astro";
+import IconCss from "./IconCss.astro";
+import IconJavaScript from "./IconJavaScript.astro";
+import IconTypeScript from "./IconTypeScript.astro";
+import IconReact from "./IconReact.astro";
+import IconNextjs from "./IconNextjs.astro";
+import IconTailwind from "./IconTailwind.astro";
+import IconRedux from "./IconRedux.astro";
+import IconNodeJs from "./IconNodeJs.astro";
+import IconLaravel from "./IconLaravel.astro";
+import IconMongodb from "./IconMongodb.astro";
+import IconGit from "./IconGit.astro";
+import IconGitHub from "./IconGitHub.astro";
+import IconWordPress from "./IconWordPress.astro"; // Import de WordPress
+import IconSql from "./IconSql.astro"; // Import de SQL
+
+export const ICONS = {
+  html: IconHtml,
+  css: IconCss,
+  javaScript: IconJavaScript,
+  typeScript: IconTypeScript,
+  react: IconReact,
+  nextjs: IconNextjs,
+  tailwind: IconTailwind,
+  redux: IconRedux,
+  nodejs: IconNodeJs,
+  laravel: IconLaravel,
+  mongodb: IconMongodb,
+  git: IconGit,
+  github: IconGitHub,
+  wordpress: IconWordPress,
+  sql: IconSql, // Inclusion de SQL
+};
+
+export function getIconComponent(iconName: string) {
+  return ICONS[iconName] || null;
+}
