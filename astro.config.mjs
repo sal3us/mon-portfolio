@@ -1,11 +1,7 @@
 import { defineConfig } from "astro/config";
-import vercel from "@astrojs/vercel/serverless";
+import vercel from "@astrojs/vercel/static";
 
 export default defineConfig({
-  output: "server", // Assurez-vous que cette ligne est présente
-  adapter: vercel({
-    webAnalytics: {
-      enabled: true,
-    },
-  }),
+  output: "static",
+  adapter: vercel(),
 });
