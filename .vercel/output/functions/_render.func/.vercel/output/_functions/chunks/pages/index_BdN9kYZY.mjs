@@ -6,7 +6,7 @@ import 'clsx';
 import { $ as $$Image } from './generic_CM-gt6nC.mjs';
 
 const $$Header = createComponent(($$result, $$props, $$slots) => {
-  return renderTemplate`${maybeRenderHead()}<header class="header"> <h1 id="inicio">Bienvenue sur mon Portfolio</h1> <!-- Texte modifié --> <nav class="nav"> <ul class="ul-nav"> <a href="#inicio"> <li class="li-nav">Accueil</li> <!-- Texte modifié --> </a> <a href="#proyectos"> <li class="li-nav">Mes Projets</li> <!-- Texte modifié --> </a> <a href="#skills"> <li class="li-nav">Compétences</li> </a> <a href="#contacto"> <li class="li-nav">Me Contacter</li> <!-- Texte modifié --> </a> </ul> </nav> <div class="container-bnt-menu"> <div class="btn-menu"> <span class="linea-menu" id="linea1"></span> <span class="linea-menu" id="linea2"></span> <span class="linea-menu" id="linea3"></span> </div> </div> <div class="menu-drop"></div>  </header> `;
+  return renderTemplate`${maybeRenderHead()}<header class="header"> <h1 id="inicio"> Portfolio</h1> <!-- Texte modifié --> <nav class="nav"> <ul class="ul-nav"> <a href="#inicio"> <li class="li-nav">Accueil</li> <!-- Texte modifié --> </a> <a href="#proyectos"> <li class="li-nav">Mes Projets</li> <!-- Texte modifié --> </a> <a href="#skills"> <li class="li-nav">Compétences</li> </a> <a href="#contacto"> <li class="li-nav">Me Contacter</li> <!-- Texte modifié --> </a> </ul> </nav> <div class="container-bnt-menu"> <div class="btn-menu"> <span class="linea-menu" id="linea1"></span> <span class="linea-menu" id="linea2"></span> <span class="linea-menu" id="linea3"></span> </div> </div> <div class="menu-drop"></div>  </header> `;
 }, "C:/xampp/htdocs/Portafolio-main/Portafolio-main/src/components/header/Header.astro", void 0);
 
 const skills = [
